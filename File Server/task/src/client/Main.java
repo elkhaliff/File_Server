@@ -2,6 +2,7 @@ package client;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 
@@ -19,15 +20,12 @@ public class Main {
         ) {
             println("Client started!");
 
-            Action action = new Action();
-            String commandLine = action.getCommand();
+            Action action = new Action(input, output);
+            action.run();
+            println("The request was sent.");
 
-            output.writeUTF(commandLine);
-            System.out.println("The request was sent.");
-
-            String response = input.readUTF();
-            action.setResponse(response);
-            println(action.getResponse());
+            String response = action.getResponse();
+            println(response);
         } catch (IOException e) {
             e.printStackTrace();
         }

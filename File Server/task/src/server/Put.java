@@ -3,9 +3,9 @@ package server;
 public class Put implements Command {
     private final DataBase dataBase;
     private final String fileName;
-    private final String content;
+    private final byte[] content;
 
-    public Put(DataBase dataBase, String fileName, String content) {
+    public Put(DataBase dataBase, String fileName, byte[] content) {
         this.dataBase = dataBase;
         this.fileName = fileName;
         this.content = content;

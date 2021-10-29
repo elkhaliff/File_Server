@@ -5,24 +5,31 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Session  extends Thread { // implements Runnable {
-    private static final DataBase dataBase = new DataBase();
 
-    private static final String SET = "PUT";
+    private static final String PUT = "PUT";
     private static final String GET = "GET";
     private static final String DELETE = "DELETE";
     private static final String EXIT = "exit";
 
+    private static final String BY_NAME = "BY_NAME";
+    private static final String BY_ID = "BY_ID";
+
+    private String currAction;
+
     private final Socket socket;
     private final ServerSocket server;
     private AtomicBoolean stopServer;
+    private DataBase dataBase;
 
-    public Session(ServerSocket server, Socket socket, AtomicBoolean stopServer) {
+    public Session(ServerSocket server, Socket socket, DataBase dataBase, AtomicBoolean stopServer) {
         this.server = server;
         this.socket = socket;
         this.stopServer = stopServer;
+        this.dataBase = dataBase;
     }
 
     @Override
@@ -35,25 +42,40 @@ public class Session  extends Thread { // implements Runnable {
             TransactionBroker transactionBroker = new TransactionBroker();
             Command command;
 
-            String receivedMsg = input.readUTF();
-            String[] commands = receivedMsg.split(" ");
+            Scanner inpScan = new Scanner(input);
+            currAction = inpScan.next().trim();
+            if (currAction.equals(EXIT)) System.out.println(EXIT);
+            else System.out.println("Unexpected action: " + currAction);
+            String fileName = "";
+            int fileId = 0;
 
-            switch (commands[0]) {
-                case SET: {
-                    StringBuilder sb = new StringBuilder();
-                    for (int i = 2; i < commands.length; i++) {
-                        sb.append(commands[i]);
-                        sb.append(" ");
-                    }
-                    command = new Put(dataBase, commands[1], sb.toString().trim());
+            switch (currAction) {
+                case PUT: {
+                    fileName = inpScan.next();
+                    int fileLength = inpScan.nextInt();
+                    byte[] content = new byte[fileLength];
+                    input.readFully(content, 0, content.length);
+
+                    command = new Put(dataBase, fileName, content);
                     break;
                 }
                 case GET: {
-                    command = new Get(dataBase, commands[1]);
+                    String type = inpScan.next().trim();
+                    if (type.equals(BY_ID))
+                        fileId = inpScan.nextInt();
+                    else
+                        fileName = inpScan.next();
+
+                    command = new Get(dataBase, fileName, fileId);
                     break;
                 }
                 case DELETE: {
-                    command = new Delete(dataBase, commands[1]);
+                    String type = inpScan.next();
+                    if (type.equals(BY_ID))
+                        fileId = inpScan.nextInt();
+                    else
+                        fileName = inpScan.next();
+                    command = new Delete(dataBase, fileName, fileId);
                     break;
                 }
                 case EXIT: {
@@ -62,13 +84,31 @@ public class Session  extends Thread { // implements Runnable {
                     break;
                 }
                 default: {
-                    throw new IllegalStateException("Unexpected type: " + commands[0]);
+                    throw new IllegalStateException("Unexpected action: " + currAction);
                 }
             }
             transactionBroker.setCommand(command);
             transactionBroker.executeCommand();
-            Response msgOut = transactionBroker.getResultCommand();
-            output.writeUTF(msgOut.getResponse());
+
+            Response response = transactionBroker.getResultCommand();
+            output.writeInt(response.getResponse());
+
+            if (currAction.equals(PUT)) {
+                if (response.getId_file() != 0)
+                    output.writeInt(response.getId_file());
+            }
+            if (currAction.equals(GET) || response.getContent().length > 0) {
+                output.writeInt(response.getContent().length);
+                output.write(response.getContent());
+            }
+            if (stopServer.get()) {
+                try {
+                    // Serialize dataBase
+                    SerializationUtils.serialize(dataBase, dataBase.getDbFilePath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {

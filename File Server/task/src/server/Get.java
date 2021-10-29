@@ -2,16 +2,18 @@ package server;
 
 public class Get implements Command {
     private final DataBase dataBase;
-    private final String key;
+    private final String fileName;
+    private final int fileId;
 
-    public Get(DataBase dataBase, String key) {
+    public Get(DataBase dataBase, String fileName, int fileId) {
         this.dataBase = dataBase;
-        this.key = key;
+        this.fileName = fileName;
+        this.fileId = fileId;
     }
 
     @Override
     public void execute() {
-        dataBase.get(key);
+        dataBase.get(fileName, fileId);
     }
 
     @Override

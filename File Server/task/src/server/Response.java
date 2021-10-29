@@ -1,23 +1,23 @@
 package server;
 
 public class Response {
-    private String response;
-    private String content;
+    private int response;
+    private int id_file;
+    private byte[] content;
 
-    public void setResponse(String response) {
+    public void setResponse(int response) {
         this.response = response;
     }
 
-    public void setContent(String content) {
+    public void setId_file(int id_file) { this.id_file = id_file; }
+
+    public void setContent(byte[] content) {
         this.content = content;
     }
 
-    public String getResponse() {
-        StringBuilder ret = new StringBuilder(response);
-        if (content != null) {
-            ret.append(" ");
-            ret.append(content);
-        }
-        return ret.toString();
-    }
+    public byte[] getContent() { return content; }
+
+    public int getId_file() { return id_file; }
+
+    public int getResponse() { return response; }
 }
