@@ -5,7 +5,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Session  extends Thread { // implements Runnable {
@@ -15,15 +14,12 @@ public class Session  extends Thread { // implements Runnable {
     private static final String DELETE = "DELETE";
     private static final String EXIT = "exit";
 
-    private static final String BY_NAME = "BY_NAME";
     private static final String BY_ID = "BY_ID";
-
-    private String currAction;
 
     private final Socket socket;
     private final ServerSocket server;
-    private AtomicBoolean stopServer;
-    private DataBase dataBase;
+    private final AtomicBoolean stopServer;
+    private final DataBase dataBase;
 
     public Session(ServerSocket server, Socket socket, DataBase dataBase, AtomicBoolean stopServer) {
         this.server = server;
@@ -42,17 +38,16 @@ public class Session  extends Thread { // implements Runnable {
             TransactionBroker transactionBroker = new TransactionBroker();
             Command command;
 
-            Scanner inpScan = new Scanner(input);
-            currAction = inpScan.next().trim();
-            if (currAction.equals(EXIT)) System.out.println(EXIT);
-            else System.out.println("Unexpected action: " + currAction);
+            String currAction = input.readUTF();
+            System.out.println(currAction);
             String fileName = "";
             int fileId = 0;
 
             switch (currAction) {
                 case PUT: {
-                    fileName = inpScan.next();
-                    int fileLength = inpScan.nextInt();
+                    fileName = input.readUTF();
+                    int fileLength = input.readInt();
+                    System.out.println(fileName + " " + fileLength);
                     byte[] content = new byte[fileLength];
                     input.readFully(content, 0, content.length);
 
@@ -60,21 +55,21 @@ public class Session  extends Thread { // implements Runnable {
                     break;
                 }
                 case GET: {
-                    String type = inpScan.next().trim();
+                    String type = input.readUTF();
                     if (type.equals(BY_ID))
-                        fileId = inpScan.nextInt();
+                        fileId = input.readInt();
                     else
-                        fileName = inpScan.next();
+                        fileName = input.readUTF();
 
                     command = new Get(dataBase, fileName, fileId);
                     break;
                 }
                 case DELETE: {
-                    String type = inpScan.next();
+                    String type = input.readUTF();
                     if (type.equals(BY_ID))
-                        fileId = inpScan.nextInt();
+                        fileId = input.readInt();
                     else
-                        fileName = inpScan.next();
+                        fileName = input.readUTF();
                     command = new Delete(dataBase, fileName, fileId);
                     break;
                 }

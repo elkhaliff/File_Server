@@ -14,7 +14,7 @@ public class DataBase implements Serializable {
     private static final String fileDB = "db.data";
     private static final String SP = File.separator;
     private static final String dbFilePath = System.getProperty("user.dir") + SP +
-//            "File Server" + SP + "task" + SP +
+            "File Server" + SP + "task" + SP +
             "src" + SP + "server" + SP + "data";
 
     private final TreeMap<Integer, String> db;

@@ -31,22 +31,17 @@ public class Action {
 
     private static final String SP = File.separator;
     private static final String dbFilePath = System.getProperty("user.dir") + SP +
-//            "File Server" + SP + "task" + SP +
+            "File Server" + SP + "task" + SP +
             "src" + SP + "client" + SP + "data";
 
     DataInputStream input;
     DataOutputStream output;
 
-    private String response;
     private String currAction;
 
     public Action(DataInputStream input, DataOutputStream output) {
         this.input = input;
         this.output = output;
-    }
-
-    public void setResponse(String response) {
-        this.response = response;
     }
 
     public void run() {
@@ -55,7 +50,7 @@ public class Action {
             case ACT_PUT: {
                 String fileName = getFileName();
                 String fileNameOnServer = getFileNameOnServer();
-                fileNameOnServer = (fileNameOnServer == null) ? fileName : fileNameOnServer;
+                fileNameOnServer = (fileNameOnServer == "") ? fileName : fileNameOnServer;
                 putFile(fileNameOnServer, loadFile(fileName));
                 break;
             }
@@ -83,7 +78,7 @@ public class Action {
     private void exit() {
         currAction = EXIT;
         try {
-            output.writeChars(currAction);
+            output.writeUTF(currAction);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -92,7 +87,8 @@ public class Action {
     private void putFile(String fileName, byte[] content) {
         currAction = PUT;
         try {
-            output.writeChars(currAction);
+            output.writeUTF(currAction);
+            output.writeUTF(fileName);
             output.writeInt(content.length);
             output.write(content);
         } catch (IOException e) {
@@ -104,10 +100,10 @@ public class Action {
         currAction = action;
         String actionType = getActionType();
         try {
-            output.writeChars(currAction);
-            output.writeChars(actionType);
+            output.writeUTF(currAction);
+            output.writeUTF(actionType);
             if (actionType.equals(BY_NAME)) {
-                output.writeChars(getFileName());
+                output.writeUTF(getFileName());
             } else
                 output.writeInt(getFileId());
         } catch (IOException e) {
@@ -153,19 +149,25 @@ public class Action {
             case ALREADY_EXISTS: ret = "The response says that creating the file was forbidden!"; break;
             case SUCCESSFUL: {
                 String secs = "The response says that file ";
-                if (currAction.equals(PUT)) ret = secs + "is saved! ID = " + inpScan.nextInt();
-                else if (currAction.equals(GET)) {
-                    int fileLength = inpScan.nextInt();
-                    byte[] content = new byte[fileLength];
-                    try {
-                        input.readFully(content, 0, content.length);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    saveFile(getString(SET_FILE_NAME), content);
-                    ret = "File saved on the hard drive!";
+                switch (currAction) {
+                    case PUT:
+                        ret = secs + "is saved! ID = " + inpScan.nextInt();
+                        break;
+                    case GET:
+                        int fileLength = inpScan.nextInt();
+                        byte[] content = new byte[fileLength];
+                        try {
+                            input.readFully(content, 0, content.length);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        saveFile(getString(SET_FILE_NAME), content);
+                        ret = "File saved on the hard drive!";
+                        break;
+                    case DELETE:
+                        ret = secs + "was deleted successfully!";
+                        break;
                 }
-                else if (currAction.equals(DELETE)) ret = secs + "was deleted successfully!";
                 break;
             }
         }
