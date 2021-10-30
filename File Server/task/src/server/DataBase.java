@@ -14,7 +14,7 @@ public class DataBase implements Serializable {
     private static final String fileDB = "db.data";
     private static final String SP = File.separator;
     private static final String dbFilePath = System.getProperty("user.dir") + SP +
-            "File Server" + SP + "task" + SP +
+//            "File Server" + SP + "task" + SP +
             "src" + SP + "server" + SP + "data";
 
     private final TreeMap<Integer, String> db;
@@ -51,22 +51,24 @@ public class DataBase implements Serializable {
                 outputStream.write(content);
                 int nextKey = (db.size() > 0) ? db.lastKey() + 1 : 1;
                 db.put(nextKey, fileName);
+                out.setId_file(nextKey);
+                out.setResponse(SUCCESSFUL);
             } catch (Exception e) {
                 out.setResponse(ERROR);
             }
         }
     }
 
-    private byte[] loadFile(String fileName, int fileId) {
-        byte[] content = null;
-        if (fileName == "" || fileId != 0) fileName = db.get(fileId);
+    private void loadFile(String fileName, int fileId) {
+        if (fileName.equals("") || fileId != 0) fileName = db.get(fileId);
         if (fileId == 0) fileId = getKeyByValue(fileName);
         if (fileId != 0) {
             File file = new File(dbFilePath + SP + fileName);
             if (file.length() > 0) {
-//            content = new byte[(int)file.length()];
                 try (FileInputStream inputStream = new FileInputStream(file)) {
-                    content = inputStream.readAllBytes();
+                    out.setId_file(fileId);
+                    out.setContent(inputStream.readAllBytes());
+                    out.setResponse(SUCCESSFUL);
                 } catch (Exception e) {
                     out.setContent(null);
                     out.setResponse(ERROR);
@@ -74,17 +76,17 @@ public class DataBase implements Serializable {
             }
         } else
             out.setResponse(ERROR);
-        return content;
     }
 
     private void deleteFile(String fileName, int fileId) {
-        if (fileName == "" || fileId != 0) fileName = db.get(fileId);
+        if (fileName.equals("") || fileId != 0) fileName = db.get(fileId);
         if (fileId == 0) fileId = getKeyByValue(fileName);
         if (fileId != 0) {
             File file = new File(dbFilePath + SP + fileName);
-            if (file.delete())
+            if (file.delete()) {
                 db.remove(fileId);
-            else
+                out.setResponse(SUCCESSFUL);
+            } else
                 out.setResponse(ERROR);
         } else
             out.setResponse(ERROR);
@@ -96,17 +98,15 @@ public class DataBase implements Serializable {
             out.setResponse(ALREADY_EXISTS);
         } else {
             saveFile(fileName, content);
-            out.setResponse(SUCCESSFUL);
         }
     }
 
     public void get(String fileName, int fileId) {
         initTran();
-        if (!db.containsValue(fileName) || !db.containsKey(fileId)) {
+        if (!db.containsValue(fileName) && !db.containsKey(fileId)) {
             out.setResponse(ERROR);
         } else {
-            out.setContent(loadFile(fileName, fileId));
-            out.setResponse(SUCCESSFUL);
+            loadFile(fileName, fileId);
         }
     }
 
@@ -116,7 +116,6 @@ public class DataBase implements Serializable {
             out.setResponse(ERROR);
         } else {
             deleteFile(fileName, fileId);
-            out.setResponse(SUCCESSFUL);
         }
     }
 

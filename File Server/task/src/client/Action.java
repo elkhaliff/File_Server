@@ -31,7 +31,7 @@ public class Action {
 
     private static final String SP = File.separator;
     private static final String dbFilePath = System.getProperty("user.dir") + SP +
-            "File Server" + SP + "task" + SP +
+//            "File Server" + SP + "task" + SP +
             "src" + SP + "client" + SP + "data";
 
     DataInputStream input;
@@ -50,7 +50,7 @@ public class Action {
             case ACT_PUT: {
                 String fileName = getFileName();
                 String fileNameOnServer = getFileNameOnServer();
-                fileNameOnServer = (fileNameOnServer == "") ? fileName : fileNameOnServer;
+                fileNameOnServer = (fileNameOnServer.equals("")) ? fileName : fileNameOnServer;
                 putFile(fileNameOnServer, loadFile(fileName));
                 break;
             }
@@ -137,24 +137,23 @@ public class Action {
         return getInt(GET_FILE_ID);
     }
 
-    public String getResponse() {
+    public String getResponse() throws IOException {
         String ret = "";
         if (currAction.equals(EXIT)) return ret;
 
-        Scanner inpScan = new Scanner(input);
-        int response = inpScan.nextInt();
+        int response = input.readInt();
 
         switch (response) {
-            case ERROR: ret = "The response says that the file was not found!"; break;
+            case ERROR: ret = "The response says that this file is not found!"; break;
             case ALREADY_EXISTS: ret = "The response says that creating the file was forbidden!"; break;
             case SUCCESSFUL: {
                 String secs = "The response says that file ";
                 switch (currAction) {
                     case PUT:
-                        ret = secs + "is saved! ID = " + inpScan.nextInt();
+                        ret = "Response says that file is saved! ID = " + input.readInt();
                         break;
                     case GET:
-                        int fileLength = inpScan.nextInt();
+                        int fileLength = input.readInt();
                         byte[] content = new byte[fileLength];
                         try {
                             input.readFully(content, 0, content.length);

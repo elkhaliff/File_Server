@@ -14,6 +14,8 @@ public class Session  extends Thread { // implements Runnable {
     private static final String DELETE = "DELETE";
     private static final String EXIT = "exit";
 
+    public static final int ERROR = 404;
+
     private static final String BY_ID = "BY_ID";
 
     private final Socket socket;
@@ -39,7 +41,6 @@ public class Session  extends Thread { // implements Runnable {
             Command command;
 
             String currAction = input.readUTF();
-            System.out.println(currAction);
             String fileName = "";
             int fileId = 0;
 
@@ -47,7 +48,6 @@ public class Session  extends Thread { // implements Runnable {
                 case PUT: {
                     fileName = input.readUTF();
                     int fileLength = input.readInt();
-                    System.out.println(fileName + " " + fileLength);
                     byte[] content = new byte[fileLength];
                     input.readFully(content, 0, content.length);
 
@@ -92,7 +92,7 @@ public class Session  extends Thread { // implements Runnable {
                 if (response.getId_file() != 0)
                     output.writeInt(response.getId_file());
             }
-            if (currAction.equals(GET) || response.getContent().length > 0) {
+            if (currAction.equals(GET) || response.getResponse() != ERROR) {
                 output.writeInt(response.getContent().length);
                 output.write(response.getContent());
             }
