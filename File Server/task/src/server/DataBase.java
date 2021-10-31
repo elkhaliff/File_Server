@@ -7,18 +7,21 @@ import java.io.Serializable;
 import java.util.TreeMap;
 
 public class DataBase implements Serializable {
+    private static final long serialVersionUID = 86L;
+
     public static final int SUCCESSFUL = 200;
     public static final int ERROR = 404;
     public static final int ALREADY_EXISTS = 403;
 
     private static final String fileDB = "db.data";
     private static final String SP = File.separator;
-    private static final String dbFilePath = System.getProperty("user.dir") + SP +
+    private static final String dbFilePath =
+            System.getProperty("user.dir") + SP +
 //            "File Server" + SP + "task" + SP +
             "src" + SP + "server" + SP + "data";
 
     private final TreeMap<Integer, String> db;
-    private Response out;
+    private transient Response out;
 
     public DataBase() {
         db = new TreeMap<>();
@@ -112,7 +115,7 @@ public class DataBase implements Serializable {
 
     public void delete(String fileName, int fileId) {
         initTran();
-        if (!db.containsValue(fileName) || !db.containsKey(fileId)) {
+        if (!db.containsValue(fileName) && !db.containsKey(fileId)) {
             out.setResponse(ERROR);
         } else {
             deleteFile(fileName, fileId);

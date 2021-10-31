@@ -30,7 +30,8 @@ public class Action {
     public static final int ALREADY_EXISTS = 403;
 
     private static final String SP = File.separator;
-    private static final String dbFilePath = System.getProperty("user.dir") + SP +
+    private static final String dbFilePath =
+            System.getProperty("user.dir") + SP +
 //            "File Server" + SP + "task" + SP +
             "src" + SP + "client" + SP + "data";
 
@@ -44,7 +45,7 @@ public class Action {
         this.output = output;
     }
 
-    public void run() {
+    public void make() {
         String receivedMsg = getString(ACTION);
         switch (receivedMsg) {
             case ACT_PUT: {

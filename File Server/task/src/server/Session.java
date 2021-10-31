@@ -96,19 +96,13 @@ public class Session  extends Thread { // implements Runnable {
                 output.writeInt(response.getContent().length);
                 output.write(response.getContent());
             }
-            if (stopServer.get()) {
-                try {
-                    // Serialize dataBase
-                    SerializationUtils.serialize(dataBase, dataBase.getDbFilePath());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             if (stopServer.get()) {
                 try {
+                    // Serialize dataBase
+                    SerializationUtils.serialize(dataBase, dataBase.getDbFilePath());
                     server.close();
                 } catch (IOException e) {
                     e.printStackTrace();
